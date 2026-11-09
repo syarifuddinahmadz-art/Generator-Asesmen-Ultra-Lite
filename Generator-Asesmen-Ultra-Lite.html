@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Asesmen Pintar - Ultra Lite</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,sans-serif}
+body{background:#f8fafc;color:#1e293b;padding:12px}
+h1{font-size:22px;text-align:center;font-weight:800;color:#0f172a;line-height:1.2}
+.sub{font-size:13px;text-align:center;color:#64748b;margin:6px 0 14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.card{border-radius:14px;padding:12px;color:#fff;cursor:pointer;border:3px solid transparent;transition:.2s;min-height:88px}
+.card.selected{border-color:#0f172a;transform:scale(1.02)}
+.card .icon{font-size:22px}
+.card .ttl{font-weight:800;font-size:14px;margin-top:4px}
+.card .desc{font-size:11px;opacity:.9;margin-top:2px;line-height:1.3}
+.c1{background:#3b82f6}.c2{background:#22c55e}.c3{background:#f59e0b}.c4{background:#8b5cf6}
+.form{background:#fff;border-radius:16px;padding:14px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+label{font-size:12px;font-weight:700;margin:10px 0 4px;display:block}
+input,select,textarea{width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px}
+textarea{resize:vertical;min-height:60px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{width:100%;background:#0f172a;color:#fff;border:0;border-radius:12px;padding:14px;font-weight:800;font-size:15px;margin-top:14px;cursor:pointer}
+.btn:active{transform:scale(.98)}
+.out{margin-top:14px}
+.soal{background:#fff;border-radius:14px;padding:12px;margin-bottom:10px;border-left:5px solid #3b82f6;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.soal h3{font-size:13px;margin-bottom:6px}
+.soal p{font-size:13px;line-height:1.5;white-space:pre-wrap}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:#e2e8f0;margin-bottom:6px}
+.actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.actions button{font-size:11px;padding:6px 10px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;cursor:pointer}
+.tools{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.tools button{flex:1;min-width:100px}
+.tip{margin-top:12px;background:#ecfeff;border:1px solid #a5f3fc;border-radius:10px;padding:10px;font-size:11px;text-align:center}
+</style>
+</head>
+<body>
+<h1>GENERATOR ASESMEN PINTAR</h1>
+<div class="sub">Panduan untuk Guru • 4 Jenis Asesmen</div>
+
+<div class="grid" id="cards">
+<div class="card c1" data-type="terbuka"><div class="icon">💡📖</div><div class="ttl">1. Terbuka</div><div class="desc">Esai, Uraian, Proyek</div></div>
+<div class="card c2" data-type="tertutup"><div class="icon">✅📋</div><div class="ttl">2. Tertutup</div><div class="desc">PG, Benar/Salah, Isian</div></div>
+<div class="card c3" data-type="langsung"><div class="icon">🧑‍🏫📝</div><div class="ttl">3. Langsung</div><div class="desc">Praktik, Observasi</div></div>
+<div class="card c4" data-type="tidak"><div class="icon">💬📊</div><div class="ttl">4. Tidak Langsung</div><div class="desc">Checklist, Wawancara</div></div>
+</div>
+
+<div class="form">
+<label>Mata Pelajaran</label>
+<input id="mapel" placeholder="Contoh: IPA, Matematika, Bahasa Indonesia">
+<div class="row">
+<div><label>Jenjang</label><select id="jenjang"><option>SD</option><option>SMP</option><option>SMA</option><option>SMK</option><option>Kuliah</option></select></div>
+<div><label>Kesulitan</label><select id="level"><option>Mudah</option><option>Sedang</option><option selected>Sulit</option><option>HOTS</option></select></div>
+</div>
+<label>Topik / Materi</label>
+<textarea id="topik" placeholder="Contoh: Fotosintesis, Perang Diponegoro, Persamaan Kuadrat..."></textarea>
+<label>Tujuan Pembelajaran</label>
+<textarea id="tujuan" placeholder="Contoh: Siswa mampu menjelaskan..."></textarea>
+<div class="row">
+<div><label>Jumlah Soal: <span id="jmlLabel">3</span></label><input type="range" id="jumlah" min="1" max="10" value="3" oninput="document.getElementById('jmlLabel').textContent=this.value"></div>
+<div><label>Tipe Terpilih</label><input id="tipeView" readonly value="Pilih kartu di atas" style="background:#f1f5f9"></div>
+</div>
+<button class="btn" onclick="generate()">⚡ GENERATE SOAL SEKARANG</button>
+<div class="tools">
+<button onclick="copyAll()">📋 Salin Semua</button>
+<button onclick="downloadTXT()">⬇️ Unduh TXT</button>
+<button onclick="copyPrompt()">🤖 Salin Prompt AI</button>
+</div>
+</div>
+
+<div class="out" id="out"></div>
+<div class="tip">💡 Tips: Pilih asesmen sesuai tujuan pembelajaran & karakter siswa</div>
+
+<script>
+let selected = [];
+const cards = document.querySelectorAll('.card');
+cards.forEach(c=>{
+ c.addEventListener('click',()=>{
+  const t=c.dataset.type;
+  if(selected.includes(t)){selected=selected.filter(x=>x!==t); c.classList.remove('selected');}
+  else{selected.push(t); c.classList.add('selected');}
+  document.getElementById('tipeView').value = selected.length?selected.join(', '):'Pilih kartu di atas';
+ });
+});
+function genTerbuka(mapel,topik,tujuan,level,i){
+ return `SOAL TERBUKA #${i} - Esai / Uraian Panjang [${level}]
+Mata Pelajaran: ${mapel} | Topik: ${topik}
+Pertanyaan: Jelaskan secara mendalam dan kritis tentang "${topik}" dikaitkan dengan tujuan "${tujuan}". Berikan argumentasi, contoh nyata, dan ide kreatifmu.
+
+Rubrik Penilaian:
+- Kedalaman Konsep (0-4): paham inti ${topik}
+- Argumentasi & Logika (0-4)
+- Kreativitas & Ide Orisinal (0-4)
+- Keterkaitan dengan kehidupan (0-3)
+Tips: Cocok untuk menggali pemikiran divergen siswa.`;
+}
+function genTertutup(mapel,topik,level,i){
+ const pg = `SOAL TERTUTUP #${i} - Pilihan Ganda [${level}]
+Topik: ${topik}
+Soal: Manakah pernyataan yang PALING tepat tentang "${topik}"?
+A. ${topik} hanya terjadi pada kondisi tertentu tanpa faktor pendukung
+B. ${topik} merupakan konsep yang menjelaskan hubungan sebab-akibat dalam ${mapel}
+C. ${topik} tidak relevan dengan kehidupan sehari-hari
+D. ${topik} hanya bisa dipahami oleh ahli saja
+Kunci: B
+Pembahasan: Jawaban B benar karena sesuai tujuan pembelajaran dan esensi ${topik}.
+
+Benar/Salah: Pernyataan "${topik} dapat diterapkan dalam kehidupan sehari-hari" adalah BENAR.
+Isian Singkat: ${topik} didefinisikan sebagai ________. (Jawaban: konsep utama dari ${mapel} terkait ${topik})`;
+ return pg;
+}
+function genLangsung(mapel,topik,tujuan,i){
+ return `SOAL LANGSUNG #${i} - Tes Praktik / Unjuk Kerja
+Mapel: ${mapel} | Topik: ${topik}
+Tugas: Lakukan demonstrasi/praktik langsung tentang "${topik}" sesuai tujuan "${tujuan}".
+
+Langkah:
+1. Siapkan alat & bahan terkait ${topik}
+2. Lakukan langkah kerja sesuai prosedur
+3. Amati dan catat hasil
+4. Presentasikan di depan kelas
+
+Lembar Observasi:
+- Persiapan (1-4)
+- Keterampilan proses (1-4)
+- Ketepatan hasil (1-4)
+- Sikap kerja & K3 (1-4)
+Alat dinilai langsung oleh guru saat siswa praktik.`;
+}
+function genTidak(mapel,topik,i){
+ return `SOAL TIDAK LANGSUNG #${i} - Skala & Laporan
+Topik: ${topik}
+Instrumen: Checklist & Wawancara Pihak Lain
+
+Checklist Skala Penilaian (1=Tidak Pernah, 4=Selalu):
+- Siswa menunjukkan minat pada ${topik} [ ]
+- Siswa mampu menjelaskan ${topik} kepada teman [ ]
+- Siswa menerapkan ${topik} di rumah [ ]
+
+Format Wawancara Orang Tua:
+"Bagaimana anak Anda menceritakan tentang ${topik} di rumah? Apakah ada perubahan perilaku terkait ${topik}?"
+
+Laporan Guru: Tulis narasi perkembangan siswa terkait ${topik} berdasarkan pengamatan tidak langsung.`;
+}
+
+let lastResult = '';
+function generate(){
+ const mapel = document.getElementById('mapel').value || 'Umum';
+ const topik = document.getElementById('topik').value || 'Materi Pembelajaran';
+ const tujuan = document.getElementById('tujuan').value || 'Memahami konsep';
+ const level = document.getElementById('level').value;
+ const jml = parseInt(document.getElementById('jumlah').value);
+ if(selected.length===0){alert('Pilih minimal 1 jenis asesmen di kartu atas!'); return;}
+ let html=''; let textAll='';
+ let counter=1;
+ for(let s=0;s<jml;s++){
+  const type = selected[s % selected.length];
+  let content='', color='#3b82f6', badge='';
+  if(type==='terbuka'){content=genTerbuka(mapel,topik,tujuan,level,counter); color='#3b82f6'; badge='TERBUKA - Esai/Proyek';}
+  if(type==='tertutup'){content=genTertutup(mapel,topik,level,counter); color='#22c55e'; badge='TERTUTUP - PG/Isian';}
+  if(type==='langsung'){content=genLangsung(mapel,topik,tujuan,counter); color='#f59e0b'; badge='LANGSUNG - Praktik';}
+  if(type==='tidak'){content=genTidak(mapel,topik,counter); color='#8b5cf6'; badge='TIDAK LANGSUNG - Observasi';}
+  html+=`<div class="soal" style="border-left-color:${color}"><span class="badge" style="background:${color}22;color:${color}">${badge}</span><p>${content}</p><div class="actions"><button onclick="copyText(this)">Salin Soal Ini</button></div></div>`;
+  textAll+=content+"\n\n---\n\n";
+  counter++;
+ }
+ document.getElementById('out').innerHTML=html;
+ lastResult=textAll;
+ window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+}
+function copyText(btn){
+ const p=btn.closest('.soal').querySelector('p').innerText;
+ navigator.clipboard.writeText(p).then(()=>{btn.textContent='Tersalin!'; setTimeout(()=>btn.textContent='Salin Soal Ini',1500);});
+}
+function copyAll(){
+ if(!lastResult){alert('Generate dulu!');return;}
+ navigator.clipboard.writeText(lastResult).then(()=>alert('Semua soal tersalin!'));
+}
+function downloadTXT(){
+ if(!lastResult){alert('Generate dulu!');return;}
+ const blob=new Blob([lastResult],{type:'text/plain'});
+ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='asesmen-'+Date.now()+'.txt'; a.click();
+}
+function copyPrompt(){
+ const mapel=document.getElementById('mapel').value;
+ const topik=document.getElementById('topik').value;
+ const tujuan=document.getElementById('tujuan').value;
+ const lvl=document.getElementById('level').value;
+ const prompt=`Buatkan ${document.getElementById('jumlah').value} soal ${selected.join(', ')} untuk Mapel ${mapel}, jenjang ${document.getElementById('jenjang').value}, topik "${topik}", tujuan "${tujuan}", level ${lvl}. Sertakan kunci jawaban dan rubrik. Jenis asesmen: 1) Terbuka (esai/proyek), 2) Tertutup (PG/BS/Isian/Menjodohkan), 3) Langsung (praktik/observasi/demonstrasi), 4) Tidak Langsung (checklist/wawancara/laporan).`;
+ navigator.clipboard.writeText(prompt).then(()=>alert('Prompt AI tersalin! Paste ke ChatGPT / Meta AI.'));
+}
+</script>
+</body>
+</html>
